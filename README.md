@@ -1,5 +1,10 @@
 # Vecna Operations Console
 
+<img width="1397" height="902" alt="image" src="https://github.com/user-attachments/assets/8607ca09-161d-4761-90fc-1def6ee85802" />
+
+<img width="1397" height="871" alt="image" src="https://github.com/user-attachments/assets/68a4d1f6-9b22-4b35-89c4-ce55c1805ba7" />
+
+
 Take-home style stack: **Strands** agent (Python), **FastAPI** backend, **React + TypeScript** frontend. Passive reconnaissance against a user-supplied URL with live streaming, findings, credits, and persisted operations.
 
 **New to this stack?** See **[docs/PROJECT_GUIDE.md](docs/PROJECT_GUIDE.md)** for packages, folders, and vocabulary. For **line-by-line, file-by-file** explanations (meant for first-time learners), use **[docs/FILE_BY_FILE.md](docs/FILE_BY_FILE.md)**. For **how this repo implements** cost, retries, HTTP client, telemetry, rate limits, streaming, history, health, and WebSockets, see **[docs/CAPABILITIES.md](docs/CAPABILITIES.md)**.
