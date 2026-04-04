@@ -6,6 +6,8 @@ This document explains **what each part of the project does**, **which packages 
 
 **Want a capability map?** **[CAPABILITIES.md](CAPABILITIES.md)** ties features (costs, retries, telemetry, rate limits, streaming, history, health, WebSockets) to concrete modules in this repo.
 
+**Want one continuous read?** **[ARCHITECTURE_ESSAY.md](ARCHITECTURE_ESSAY.md)** is an essay-length walkthrough of how the system is designed and how the pieces cooperate.
+
 ---
 
 ## 1. What you are building (one picture)

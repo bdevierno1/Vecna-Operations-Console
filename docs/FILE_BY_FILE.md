@@ -8,7 +8,7 @@ This document walks through **almost every project-owned file** and explains **w
 - Skim the **directory sections**; drill into a file when you are debugging or changing that area.
 - When you see jargon (ORM, WebSocket, …), there is a short explanation inline or in **§3**.
 
-**Related:** [`PROJECT_GUIDE.md`](PROJECT_GUIDE.md) is the shorter “packages + folders” tour. [`CAPABILITIES.md`](CAPABILITIES.md) maps features (cost, retries, telemetry, …) to modules.
+**Related:** [`PROJECT_GUIDE.md`](PROJECT_GUIDE.md) is the shorter “packages + folders” tour. [`CAPABILITIES.md`](CAPABILITIES.md) maps features to modules. [`ARCHITECTURE_ESSAY.md`](ARCHITECTURE_ESSAY.md) is a full narrative of how the app works.
 
 ---
 

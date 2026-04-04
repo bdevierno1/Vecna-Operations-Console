@@ -14,6 +14,8 @@ This document maps **common “console” style features** (cost visibility, ret
 | **“Who sees dollar amounts”** | `VECNA_HIDE_COSTS` in config → `GET /api/config` exposes `billing_visible`; frontend hides $ when off. |
 | **Persist / restore billing session** | `POST /api/billing/sessions`, `GET /api/billing/sessions/{id}`; client stores `session_id` (e.g. `localStorage`) and sends it with `POST /api/operations`. |
 
+**Future auth:** With real users, replace anonymous `session_id` + `localStorage` with **user- (or org-) scoped** billing: server-issued session tokens, **`BillingSession` rows keyed to `user_id`**, and **authorization** on billing APIs so totals are not readable by guessing a UUID. Cost/pricing **math** in `cost.py` / `pricing.py` can stay; **ownership and API shape** should change.
+
 ---
 
 ## Errors & retries

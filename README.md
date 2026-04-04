@@ -7,7 +7,7 @@
 
 Take-home style stack: **Strands** agent (Python), **FastAPI** backend, **React + TypeScript** frontend. Passive reconnaissance against a user-supplied URL with live streaming, findings, credits, and persisted operations.
 
-**New to this stack?** See **[docs/PROJECT_GUIDE.md](docs/PROJECT_GUIDE.md)** for packages, folders, and vocabulary. For **line-by-line, file-by-file** explanations (meant for first-time learners), use **[docs/FILE_BY_FILE.md](docs/FILE_BY_FILE.md)**. For **how this repo implements** cost, retries, HTTP client, telemetry, rate limits, streaming, history, health, and WebSockets, see **[docs/CAPABILITIES.md](docs/CAPABILITIES.md)**.
+**New to this stack?** See **[docs/PROJECT_GUIDE.md](docs/PROJECT_GUIDE.md)** for packages, folders, and vocabulary. For **line-by-line, file-by-file** explanations (meant for first-time learners), use **[docs/FILE_BY_FILE.md](docs/FILE_BY_FILE.md)**. For **how this repo implements** cost, retries, HTTP client, telemetry, rate limits, streaming, history, health, and WebSockets, see **[docs/CAPABILITIES.md](docs/CAPABILITIES.md)**. For a **single narrative** on how the app works end-to-end (essay style), see **[docs/ARCHITECTURE_ESSAY.md](docs/ARCHITECTURE_ESSAY.md)**.
 
 ## Repository layout
 
@@ -20,7 +20,7 @@ Take-home style stack: **Strands** agent (Python), **FastAPI** backend, **React 
 | `backend/agent/` | Strands agent, LiteLLM adapter, recon tools + hooks |
 | `backend/tests/` | Pytest |
 | `frontend/src/` | Vite + React UI (`App.tsx`, `components/ui`, `lib`) |
-| `docs/` | Learning docs (`PROJECT_GUIDE.md`, `FILE_BY_FILE.md`, `CAPABILITIES.md`) |
+| `docs/` | Learning docs (`PROJECT_GUIDE.md`, `FILE_BY_FILE.md`, `CAPABILITIES.md`, `ARCHITECTURE_ESSAY.md`) |
 | `electron/` | Optional **desktop window** (Electron); see `electron/README.md` |
 
 ## Desktop window (Electron)
