@@ -16,6 +16,17 @@ Take-home style stack: **Strands** agent (Python), **FastAPI** backend, **React 
 | `backend/tests/` | Pytest |
 | `frontend/src/` | Vite + React UI (`App.tsx`, `components/ui`, `lib`) |
 | `docs/` | Learning docs (`PROJECT_GUIDE.md`, `FILE_BY_FILE.md`) |
+| `electron/` | Optional **desktop window** (Electron); see `electron/README.md` |
+
+## Desktop window (Electron)
+
+Use the same UI in a native window (recommended workflow: backend + Vite + Electron):
+
+1. Backend: `uvicorn` on port **8000** (see Backend above).
+2. Frontend: `cd frontend && npm run dev` (Vite on **5173**).
+3. Electron: `cd electron && npm install && npm start`.
+
+Details, env vars (`ELECTRON_OPEN_DEVTOOLS`, built `dist/` + `VITE_API_ORIGIN`), and CORS notes: **[electron/README.md](electron/README.md)**.
 
 ## Prerequisites
 

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { apiUrl, wsUrl } from '@/lib/apiBase'
 import { appendStreamEntry, foldStreamEntries, type StreamEntry } from '@/lib/streamMerge'
 import { cn } from '@/lib/utils'
 
@@ -173,7 +174,7 @@ export default function App() {
   const WS_PING_INTERVAL_MS = 30000
 
   const refreshSessionBilling = useCallback(async (sid: string) => {
-    const r = await fetch(`/api/billing/sessions/${sid}`)
+    const r = await fetch(apiUrl(`/api/billing/sessions/${sid}`))
     if (!r.ok) return
     setSessionBilling((await r.json()) as SessionBilling)
   }, [])
@@ -182,7 +183,7 @@ export default function App() {
     void (async () => {
       let sid = localStorage.getItem(BILLING_SESSION_KEY)
       if (!sid) {
-        const r = await fetch('/api/billing/sessions', { method: 'POST' })
+        const r = await fetch(apiUrl('/api/billing/sessions'), { method: 'POST' })
         if (!r.ok) return
         const j = (await r.json()) as { session_id: string }
         sid = j.session_id
@@ -194,7 +195,7 @@ export default function App() {
   }, [refreshSessionBilling])
 
   const loadOps = useCallback(async () => {
-    const r = await fetch('/api/operations')
+    const r = await fetch(apiUrl('/api/operations'))
     if (!r.ok) return
     const data = (await r.json()) as OperationRow[]
     setOps(data)
@@ -206,7 +207,7 @@ export default function App() {
 
   useEffect(() => {
     void (async () => {
-      const r = await fetch('/api/config')
+      const r = await fetch(apiUrl('/api/config'))
       if (!r.ok) return
       const cfg = (await r.json()) as {
         litellm_model_id: string
@@ -228,7 +229,7 @@ export default function App() {
   useEffect(() => {
     void (async () => {
       try {
-        const r = await fetch('/api/health/deep')
+        const r = await fetch(apiUrl('/api/health/deep'))
         if (r.ok) {
           const h = (await r.json()) as { status: string }
           setHealthStatus(h.status === 'ok' ? 'ok' : h.status === 'degraded' ? 'degraded' : 'error')
@@ -254,8 +255,7 @@ export default function App() {
       _clearWsTimers()
       wsRef.current?.close()
 
-      const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-      const ws = new WebSocket(`${proto}//${window.location.host}/ws/operations/${operationId}`)
+      const ws = new WebSocket(wsUrl(`/ws/operations/${operationId}`))
       wsRef.current = ws
 
       ws.onopen = () => {
@@ -394,7 +394,7 @@ export default function App() {
     setCostEstimateUnknown(false)
     setSummary('')
     setStatus('running')
-    const r = await fetch('/api/operations', {
+    const r = await fetch(apiUrl('/api/operations'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -417,7 +417,7 @@ export default function App() {
 
   const cancelOperation = async () => {
     if (!selectedId) return
-    const r = await fetch(`/api/operations/${selectedId}/cancel`, { method: 'POST' })
+    const r = await fetch(apiUrl(`/api/operations/${selectedId}/cancel`), { method: 'POST' })
     if (!r.ok) {
       const j = await r.json().catch(() => ({}))
       setError((j as { detail?: string }).detail || 'Could not cancel operation.')
@@ -441,7 +441,7 @@ export default function App() {
     setCostEstimateUnknown(false)
     setSummary('')
     setStatus('running')
-    const r = await fetch(`/api/demo/force-error?error_type=${encodeURIComponent(errorType)}`, {
+    const r = await fetch(apiUrl(`/api/demo/force-error?error_type=${encodeURIComponent(errorType)}`), {
       method: 'POST',
     })
     if (!r.ok) {
@@ -468,7 +468,7 @@ export default function App() {
     setDurationSeconds(null)
     setCostEstimateUnknown(false)
     setSummary('')
-    const r = await fetch(`/api/operations/${id}`)
+    const r = await fetch(apiUrl(`/api/operations/${id}`))
     if (!r.ok) return
     const row = (await r.json()) as {
       target_url: string
@@ -565,7 +565,7 @@ export default function App() {
 
   const downloadStructuredReport = useCallback(async () => {
     if (!selectedId) return
-    const r = await fetch(`/api/operations/${selectedId}/report.json`)
+    const r = await fetch(apiUrl(`/api/operations/${selectedId}/report.json`))
     if (!r.ok) return
     const data = await r.json()
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })

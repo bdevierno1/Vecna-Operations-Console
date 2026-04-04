@@ -369,6 +369,10 @@ Single HTML shell: **`div#root`** where React mounts; script entry **`/src/main.
 
 Tiny helpers—typically **`cn()`** merges class names (Tailwind-friendly).
 
+### `src/lib/apiBase.ts`
+
+**`apiUrl`** / **`wsUrl`** — prepend optional **`VITE_API_ORIGIN`** so the same app works behind the Vite proxy (browser) and when opened from **`file://`** (Electron + built `dist`).
+
 ### `src/lib/streamMerge.ts`
 
 **Merges noisy stream lines** for display: combines chunked tool args and text deltas, collapses duplicate `human_line`s, handles “cumulative vs incremental” provider quirks. Documented in file header comments.
@@ -387,19 +391,21 @@ Static assets served as-is; `index.html` references favicon.
 
 ### `package.json`
 
-Declares **Electron** devDependency and **`npm start`** script.
+Declares **Electron** and scripts: **`npm start`** (load Vite dev URL), **`npm run start:dist`** (load built `frontend/dist`).
 
 ### `main.js`
 
-Minimal **desktop shell**: opens a **`BrowserWindow`** and loads **`http://localhost:5173`**. You must still run Vite + backend separately unless you change this.
+Opens a **`BrowserWindow`**: by default **`http://localhost:5173`** (run Vite + backend first). Can load **`../frontend/dist/index.html`** when `ELECTRON_USE_DEV_SERVER=0`; then build the frontend with **`VITE_API_ORIGIN=http://127.0.0.1:8000`** so `fetch`/`WebSocket` hit the API (see **`electron/README.md`**).
 
-**Learning note:** This is **not** a production packaging pipeline—just a window around the dev URL.
+### `README.md`
+
+Step-by-step for dev vs built UI and CORS.
 
 ---
 
 ## 12. How to practice (concrete exercises)
 
-1. **Trace a request:** From `App.tsx` `fetch('/api/operations')` → `main.py` `start_operation` → `runner.execute_operation` → first `hub.publish`.
+1. **Trace a request:** From `App.tsx` `fetch(apiUrl('/api/operations'))` → `main.py` `start_operation` → `runner.execute_operation` → first `hub.publish`.
 2. **Change copy only:** Edit `SYSTEM_PROMPT` in `vecna_agent.py`, rerun a scan, observe different report tone.
 3. **Add a log line:** In `telemetry.py`, add one `logger.info` in a function you understand; watch the Uvicorn console.
 4. **Run one test:** `cd backend && pytest tests/test_http_client.py -q` (or any `test_*.py`) and read that file alongside the module it imports.

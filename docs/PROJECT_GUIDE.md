@@ -90,7 +90,7 @@ The **Vite proxy** (`frontend/vite.config.ts`) forwards `/api` and `/ws` to `htt
 
 ## 5. Optional: Electron (`electron/`)
 
-There is a small **Electron** wrapper (`electron/package.json`) — a way to package a web UI as a desktop shell. It is **not required** for normal dev: most people run **Vite + FastAPI** only.
+**Electron** opens the React app in a desktop window. Dev flow: **FastAPI** + **`npm run dev`** in `frontend/` + **`npm start`** in `electron/`. See **[electron/README.md](../electron/README.md)** for built `dist/` + `VITE_API_ORIGIN` and CORS.
 
 ---
 
