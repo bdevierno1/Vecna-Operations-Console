@@ -4,6 +4,8 @@ This document explains **what each part of the project does**, **which packages 
 
 **Want file-by-file detail?** The long, college-notes style walkthrough is **[FILE_BY_FILE.md](FILE_BY_FILE.md)** (every important source file, what it does, and how data flows through the system).
 
+**Want a capability map?** **[CAPABILITIES.md](CAPABILITIES.md)** ties features (costs, retries, telemetry, rate limits, streaming, history, health, WebSockets) to concrete modules in this repo.
+
 ---
 
 ## 1. What you are building (one picture)
