@@ -1,0 +1,12 @@
+{
+  "name": "vecna-console-electron",
+  "private": true,
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^33.2.0"
+  }
+}
