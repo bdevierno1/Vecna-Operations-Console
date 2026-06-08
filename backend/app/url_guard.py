@@ -8,7 +8,26 @@ _BLOCKED_HOSTNAMES = frozenset(
         "0.0.0.0",
         "metadata.google.internal",
         "metadata",
+        # AWS / GCP / Azure instance metadata endpoints
+        "169.254.169.254",
+        "fd00:ec2::254",
     }
+)
+
+# Matches hostnames that *begin* with a private/reserved IPv4 prefix, e.g.
+# "10.internal.host" or "172.20.proxy.local".  Covers all RFC 1918 ranges:
+#   10.0.0.0/8      → 10.
+#   172.16.0.0/12   → 172.16–172.31 (second octet 16–31)
+#   192.168.0.0/16  → 192.168.
+# Plus loopback (127.0.0.0/8) and link-local (169.254.0.0/16).
+_PRIVATE_PREFIX_RE = re.compile(
+    r"^(?:"
+    r"10\."
+    r"|127\."
+    r"|169\.254\."
+    r"|192\.168\."
+    r"|172\.(?:1[6-9]|2\d|3[01])\."
+    r")"
 )
 
 
@@ -52,9 +71,10 @@ def is_safe_public_target(url: str) -> tuple[bool, str]:
         except ValueError:
             pass
 
-    # Block common private IPv4 prefixes by label (hostname won't match, but catch dotted names)
-    for prefix in ("10.", "192.168.", "127.", "169.254.", "172.16.", "172.17.", "172.18.", "172.19."):
-        if host.startswith(prefix):
-            return False, "Host not allowed"
+    # Block hostnames whose prefix matches a private/reserved IPv4 range
+    # (e.g. "172.20.proxy.local" or "10.internal.svc").  _PRIVATE_PREFIX_RE
+    # covers the full RFC 1918 space including 172.16–172.31.
+    if _PRIVATE_PREFIX_RE.match(host):
+        return False, "Host not allowed"
 
     return True, ""
