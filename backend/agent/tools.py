@@ -12,6 +12,7 @@ from strands import tool
 
 from agent.tool_hooks import run_tool_with_hooks
 from app.services.http_client import recon_client
+from app.url_guard import is_safe_public_target
 
 # Filled by the operation runner so tool outputs feed the live findings panel.
 _findings_bucket: ContextVar[list[dict] | None] = ContextVar("vecna_findings", default=None)
@@ -138,6 +139,9 @@ _SECURITY_HEADERS = (
 
 
 def _analyze_headers_impl(target_url: str) -> str:
+    ok, reason = is_safe_public_target(target_url)
+    if not ok:
+        return json.dumps({"error": f"URL blocked by SSRF guard: {reason}", "findings": []})
     base = _normalize_base(target_url)
     findings: list[dict[str, str]] = []
     with recon_client(read_timeout=25.0) as client:
@@ -214,6 +218,9 @@ def analyze_http_security_headers(target_url: str) -> str:
 
 
 def _probe_paths_impl(target_url: str) -> str:
+    ok, reason = is_safe_public_target(target_url)
+    if not ok:
+        return json.dumps({"error": f"URL blocked by SSRF guard: {reason}", "paths": [], "findings": []})
     base = _normalize_base(target_url).rstrip("/")
     results: list[dict] = []
     findings: list[dict[str, str]] = []

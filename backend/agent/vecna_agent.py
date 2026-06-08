@@ -5,6 +5,28 @@ from agent.vecna_litellm import VecnaLiteLLMModel
 import litellm
 from strands import Agent
 from app.config import Settings
+from app.url_guard import is_safe_public_target
+
+_OPENROUTER_API_BASE_DEFAULT = "https://openrouter.ai/api/v1"
+
+
+def _validated_gateway_base() -> str:
+    """Return the LLM gateway base URL after SSRF validation.
+
+    Reads OPENROUTER_API_BASE from the environment (falling back to the
+    official OpenRouter endpoint) and rejects any value that resolves to a
+    private/internal address — preventing server-side request forgery via
+    environment-variable injection.
+    """
+    url = (os.environ.get("OPENROUTER_API_BASE") or "").strip() or _OPENROUTER_API_BASE_DEFAULT
+    ok, reason = is_safe_public_target(url)
+    if not ok:
+        raise RuntimeError(
+            f"Gateway URL OPENROUTER_API_BASE={url!r} blocked by SSRF guard: {reason}. "
+            "Only public HTTPS endpoints are permitted for the LLM gateway."
+        )
+    return url
+
 
 SYSTEM_PROMPT = """You are Vecna Ops, a passive security reconnaissance agent.
 
@@ -45,7 +67,7 @@ def _client_args_for_model(s: Settings) -> dict | None:
             return None
         # Force OpenRouter routing: LiteLLM 1.8x can mis-detect openrouter/... and then use the
         # OpenAI client + OPENAI_API_KEY. See get_llm_provider openrouter branch.
-        base = os.environ.get("OPENROUTER_API_BASE", "https://openrouter.ai/api/v1")
+        base = _validated_gateway_base()
         return {
             "api_key": key,
             "api_base": base,
