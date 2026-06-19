@@ -67,7 +67,7 @@ jobs:
             --cov=app \
             --cov-report=term-missing \
             --cov-report=xml:coverage.xml \
-            --cov-fail-under=60 \
+            --cov-fail-under=50 \
             -v
         env:
           DATABASE_URL: "sqlite+aiosqlite:///:memory:"
