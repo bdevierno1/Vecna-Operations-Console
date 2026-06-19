@@ -365,7 +365,7 @@ export default function App() {
             const delay = Math.min(WS_BASE_RECONNECT_MS * Math.pow(2, attempt - 1), 32000)
             setWsReconnecting(true)
             wsReconnectTimerRef.current = setTimeout(() => {
-              connectWs(operationId) // eslint-disable-line react-hooks/rules-of-hooks -- safe: callback runs after const is initialised
+              connectWs(operationId) // eslint-disable-line react-hooks/immutability -- safe: setTimeout cb runs after const is initialised
             }, delay)
           } else if (
             !terminalStatuses.includes(current) &&
