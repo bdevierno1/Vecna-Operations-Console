@@ -6,12 +6,11 @@ import os
 import time
 import uuid
 from contextlib import asynccontextmanager
-from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.config import Settings  # loads agent.vecna_litellm (patches litellm for OpenRouter)
 
@@ -24,6 +23,7 @@ from app.services.cost import get_model_pricing_string
 from app.services.pricing import display_billable_total, tool_pricing_public_snapshot
 from app.services.rate_limit import current_limits, ops_rate_limit
 from app.services.runner import cancel_task, execute_operation, register_task
+from app.routers import dora as dora_router
 from app.schema_migrate import _sqlite_add_missing_columns
 from app.url_guard import is_safe_public_target
 
@@ -67,6 +67,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Vecna Operations Console", lifespan=lifespan)
+app.include_router(dora_router.router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in settings.cors_origins.split(",") if o.strip()],

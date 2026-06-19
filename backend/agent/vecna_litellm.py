@@ -77,7 +77,7 @@ async def _vecna_acompletion(*args: Any, **kwargs: Any):
 
 litellm_main.completion = _vecna_completion
 litellm_main.acompletion = _vecna_acompletion
-import litellm as _litellm_pkg
+import litellm as _litellm_pkg  # noqa: E402
 
 _litellm_pkg.completion = _vecna_completion
 _litellm_pkg.acompletion = _vecna_acompletion
