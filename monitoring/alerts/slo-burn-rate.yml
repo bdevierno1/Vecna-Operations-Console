@@ -1,0 +1,166 @@
+# Vecna Operations Console — SLO Burn-Rate Alert Rules
+# Metric source: GET /api/metrics  (backend/app/main.py)
+# Policy:  docs/slo-policy.md
+# Runbook: docs/runbooks/slo-burn-rate-runbook.md
+#
+# Budget bands (28 d window):  Green >75% | Yellow 25-75% | Red <25%
+# Multi-window guard: long window (sensitivity) + short window (confirmation).
+
+groups:
+
+  # vecna-api: SLO 99.9 % | error budget 0.001 | 43.2 min / 28 d
+  - name: vecna.slo.tier1.api
+    interval: 30s
+    rules:
+
+      - record: vecna:api_error_rate:rate5m
+        expr: >
+          1 - (
+            rate(vecna_operations_total{status="completed"}[5m])
+            / clamp_min(rate(vecna_operations_total{status!~"pending|running"}[5m]), 1e-6)
+          )
+
+      - record: vecna:api_error_rate:rate30m
+        expr: >
+          1 - (
+            rate(vecna_operations_total{status="completed"}[30m])
+            / clamp_min(rate(vecna_operations_total{status!~"pending|running"}[30m]), 1e-6)
+          )
+
+      - record: vecna:api_error_rate:rate1h
+        expr: >
+          1 - (
+            rate(vecna_operations_total{status="completed"}[1h])
+            / clamp_min(rate(vecna_operations_total{status!~"pending|running"}[1h]), 1e-6)
+          )
+
+      - record: vecna:api_error_rate:rate6h
+        expr: >
+          1 - (
+            rate(vecna_operations_total{status="completed"}[6h])
+            / clamp_min(rate(vecna_operations_total{status!~"pending|running"}[6h]), 1e-6)
+          )
+
+      - record: vecna:api_error_rate:rate3d
+        expr: >
+          1 - (
+            rate(vecna_operations_total{status="completed"}[3d])
+            / clamp_min(rate(vecna_operations_total{status!~"pending|running"}[3d]), 1e-6)
+          )
+
+      # RED — fast burn ≥ 14.4× — budget exhausts in < 2 days
+      - alert: VecnaAPIBurnRateRed
+        expr: >
+          vecna:api_error_rate:rate1h / 0.001 >= 14.4
+          and vecna:api_error_rate:rate5m / 0.001 >= 14.4
+        for: 2m
+        labels:
+          severity: critical
+          service: vecna-api
+          tier: "1"
+          budget_state: red
+        annotations:
+          summary: "vecna-api RED burn — error budget exhausted in < 2 days"
+          description: >
+            1 h error rate is {{ printf "%.1f" (div (index $value 0) 0.001) }}× the SLO budget (0.1 %).
+            At this rate the 28-day error budget (43 min) exhausts within 2 days.
+            Freeze all deploys.  Roll back the most recent change if unsure.
+          runbook_url: "https://github.com/bdevierno1/Vecna-Operations-Console/blob/main/docs/runbooks/slo-burn-rate-runbook.md"
+
+      # YELLOW — medium burn ≥ 6× — exhausts in ~5 days
+      - alert: VecnaAPIBurnRateYellow
+        expr: >
+          vecna:api_error_rate:rate6h / 0.001 >= 6
+          and vecna:api_error_rate:rate30m / 0.001 >= 6
+        for: 15m
+        labels:
+          severity: warning
+          service: vecna-api
+          tier: "1"
+          budget_state: yellow
+        annotations:
+          summary: "vecna-api YELLOW burn — error budget draining (~5 days to exhaustion)"
+          description: >
+            6 h error rate is {{ printf "%.1f" (div (index $value 0) 0.001) }}× the SLO budget.
+            At this rate the 28-day budget exhausts in ~5 days.
+            Page during business hours; freeze non-critical deploys.
+          runbook_url: "https://github.com/bdevierno1/Vecna-Operations-Console/blob/main/docs/runbooks/slo-burn-rate-runbook.md"
+
+      # GREEN elevated — slow burn ≥ 3× — exhausts in ~9 days
+      - alert: VecnaAPIBurnRateGreenElevated
+        expr: >
+          vecna:api_error_rate:rate3d / 0.001 >= 3
+          and vecna:api_error_rate:rate6h / 0.001 >= 3
+        for: 1h
+        labels:
+          severity: info
+          service: vecna-api
+          tier: "1"
+          budget_state: green
+        annotations:
+          summary: "vecna-api GREEN elevated burn — sustained 3× SLO budget consumption"
+          description: >
+            3-day error rate is {{ printf "%.1f" (div (index $value 0) 0.001) }}× the SLO budget.
+            Budget is safe today but will slide into Yellow in ~9 days if unchanged.
+            Create a ticket and fix within the sprint.
+          runbook_url: "https://github.com/bdevierno1/Vecna-Operations-Console/blob/main/docs/runbooks/slo-burn-rate-runbook.md"
+
+  # vecna-agent: SLO 99.0 % | error budget 0.01 | 6.7 h / 28 d
+  # Recording rules from vecna.slo.tier1.api are reused (same metric/SLI).
+  - name: vecna.slo.tier1.agent
+    interval: 30s
+    rules:
+
+      # RED — fast burn ≥ 14.4×
+      - alert: VecnaAgentBurnRateRed
+        expr: >
+          vecna:api_error_rate:rate1h / 0.01 >= 14.4
+          and vecna:api_error_rate:rate5m / 0.01 >= 14.4
+        for: 2m
+        labels:
+          severity: critical
+          service: vecna-agent
+          tier: "1"
+          budget_state: red
+        annotations:
+          summary: "vecna-agent RED burn — operation failure rate critical"
+          description: >
+            1 h agent failure rate is {{ printf "%.1f" (div (index $value 0) 0.01) }}× the 99 % SLO budget.
+            Check LLM upstream errors (OPENROUTER / OPENAI) and backend/app/services/runner.py.
+          runbook_url: "https://github.com/bdevierno1/Vecna-Operations-Console/blob/main/docs/runbooks/slo-burn-rate-runbook.md"
+
+      # YELLOW — medium burn ≥ 6×
+      - alert: VecnaAgentBurnRateYellow
+        expr: >
+          vecna:api_error_rate:rate6h / 0.01 >= 6
+          and vecna:api_error_rate:rate30m / 0.01 >= 6
+        for: 15m
+        labels:
+          severity: warning
+          service: vecna-agent
+          tier: "1"
+          budget_state: yellow
+        annotations:
+          summary: "vecna-agent YELLOW burn — elevated operation failure rate"
+          description: >
+            6 h agent failure rate is {{ printf "%.1f" (div (index $value 0) 0.01) }}× the 99 % SLO budget.
+            Review recent model or tool changes.  Check /api/health/deep for LLM key warnings.
+          runbook_url: "https://github.com/bdevierno1/Vecna-Operations-Console/blob/main/docs/runbooks/slo-burn-rate-runbook.md"
+
+      # GREEN elevated — slow burn ≥ 3×
+      - alert: VecnaAgentBurnRateGreenElevated
+        expr: >
+          vecna:api_error_rate:rate3d / 0.01 >= 3
+          and vecna:api_error_rate:rate6h / 0.01 >= 3
+        for: 1h
+        labels:
+          severity: info
+          service: vecna-agent
+          tier: "1"
+          budget_state: green
+        annotations:
+          summary: "vecna-agent GREEN elevated burn — sustained 3× SLO budget consumption"
+          description: >
+            3-day agent failure rate is {{ printf "%.1f" (div (index $value 0) 0.01) }}× the 99 % SLO budget.
+            Budget is stable; investigate error patterns at /api/operations for failed runs.
+          runbook_url: "https://github.com/bdevierno1/Vecna-Operations-Console/blob/main/docs/runbooks/slo-burn-rate-runbook.md"
