@@ -2,7 +2,6 @@
 
 Tests error classification and retry delay behavior for the agent runner.
 """
-import math
 import pytest
 
 from app.services.errors import (

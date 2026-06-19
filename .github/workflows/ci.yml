@@ -1,0 +1,127 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── 1. PR size gate ──────────────────────────────────────────────────────────
+  pr-size:
+    name: PR size gate (< 400 lines)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch diff size
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ADDITIONS=$(gh pr view ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --json additions,deletions \
+            --jq '.additions + .deletions')
+          echo "Diff size: ${ADDITIONS} lines"
+          if [ "$ADDITIONS" -gt 400 ]; then
+            echo "::error::PR diff is ${ADDITIONS} lines — exceeds the 400-line review limit."
+            echo "::error::Split this PR into smaller, focused changes. See code-review-standards.md."
+            exit 1
+          fi
+
+  # ── 2. Backend: lint, type-check, tests, coverage ────────────────────────────
+  backend:
+    name: Backend — tests & coverage
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest-cov ruff mypy
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Type-check (mypy)
+        run: mypy app/ --ignore-missing-imports --strict-optional
+
+      - name: Tests + coverage
+        run: |
+          pytest tests/ \
+            --cov=app \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage.xml \
+            --cov-fail-under=50 \
+            -v
+        env:
+          DATABASE_URL: "sqlite+aiosqlite:///:memory:"
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage.xml
+
+  # ── 3. Frontend: lint, type-check, build ─────────────────────────────────────
+  frontend:
+    name: Frontend — lint, type-check & build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (eslint)
+        run: npm run lint
+
+      - name: Type-check (tsc)
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+
+  # ── 4. Gate summary — all required checks must pass ──────────────────────────
+  ci-gate:
+    name: CI gate (required)
+    if: always()
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check required jobs
+        run: |
+          BACKEND="${{ needs.backend.result }}"
+          FRONTEND="${{ needs.frontend.result }}"
+          echo "backend=${BACKEND}  frontend=${FRONTEND}"
+          if [ "$BACKEND" != "success" ] || [ "$FRONTEND" != "success" ]; then
+            echo "::error::One or more required CI jobs did not succeed."
+            exit 1
+          fi
+          echo "All required checks passed."
