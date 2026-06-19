@@ -26,6 +26,7 @@ from app.services.rate_limit import current_limits, ops_rate_limit
 from app.services.runner import cancel_task, execute_operation, register_task
 from app.schema_migrate import _sqlite_add_missing_columns
 from app.url_guard import is_safe_public_target
+from app.routers import lead_scoring as lead_scoring_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -67,6 +68,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Vecna Operations Console", lifespan=lifespan)
+app.include_router(lead_scoring_router.router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in settings.cors_origins.split(",") if o.strip()],

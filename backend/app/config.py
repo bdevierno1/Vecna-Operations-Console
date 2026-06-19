@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     # When True, hide dollar amounts in the UI (cost visibility toggle).
     vecna_hide_costs: bool = Field(default=False, validation_alias="VECNA_HIDE_COSTS")
 
+    # Lead-scoring flag (default off); LEAD_SCORING_KILL_SWITCH=1 overrides.
+    lead_scoring_enabled: bool = Field(default=False, validation_alias="LEAD_SCORING_ENABLED")
+    lead_scoring_kill_switch: bool = Field(default=False, validation_alias="LEAD_SCORING_KILL_SWITCH")
+
     # Platform pricing on top of LLM token cost (USD). Zero by default.
     vecna_scan_fee_usd: float = Field(default=0.0, validation_alias="VECNA_SCAN_FEE_USD")
     # Legacy: single $/call when no tiered JSON is set (VECNA_TOOL_FAMILY_FEES_JSON / OVERRIDES / BY_TOOL).
