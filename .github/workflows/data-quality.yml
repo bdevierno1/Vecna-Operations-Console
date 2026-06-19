@@ -1,0 +1,67 @@
+name: data-quality
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  checks:
+    name: Data-quality checks & contract lint
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pyyaml
+
+      - name: Lint contracts (YAML parse + required keys)
+        run: |
+          python - <<'EOF'
+          import sys, pathlib, yaml
+
+          REQUIRED_TOP  = {"dataset", "ownership", "schema", "quality_rules", "slas"}
+          REQUIRED_QR   = {"primary_key", "not_null_cols", "validity_rules"}
+          REQUIRED_SLAS = {"freshness_timestamp_col", "freshness_max_seconds"}
+          errors = []
+
+          for p in sorted(pathlib.Path("data_quality/contracts").glob("*.yaml")):
+              doc = yaml.safe_load(p.read_text())
+              missing_top = REQUIRED_TOP - doc.keys()
+              if missing_top:
+                  errors.append(f"{p.name}: missing top-level keys {missing_top}")
+                  continue
+              qr = doc["quality_rules"]
+              missing_qr = REQUIRED_QR - qr.keys()
+              if missing_qr:
+                  errors.append(f"{p.name}: quality_rules missing {missing_qr}")
+              sla = doc["slas"]
+              missing_sla = REQUIRED_SLAS - sla.keys()
+              if missing_sla:
+                  errors.append(f"{p.name}: slas missing {missing_sla}")
+              if sla.get("freshness_max_seconds", 0) <= 0:
+                  errors.append(f"{p.name}: freshness_max_seconds must be > 0")
+
+          if errors:
+              print("\n".join(errors), file=sys.stderr)
+              sys.exit(1)
+          print(f"OK — {len(list(pathlib.Path('data_quality/contracts').glob('*.yaml')))} contract(s) valid")
+          EOF
+
+      - name: Run data-quality unit tests
+        run: pytest tests/test_data_quality.py -v
+
+      - name: Run full backend test suite
+        run: pytest --tb=short
