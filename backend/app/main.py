@@ -6,12 +6,11 @@ import os
 import time
 import uuid
 from contextlib import asynccontextmanager
-from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.config import Settings  # loads agent.vecna_litellm (patches litellm for OpenRouter)
 
