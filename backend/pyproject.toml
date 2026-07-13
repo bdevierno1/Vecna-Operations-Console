@@ -1,0 +1,7 @@
+[tool.pytest.ini_options]
+# Add backend/ to sys.path so tests can import app.*
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+exclude = [".venv"]
