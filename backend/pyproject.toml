@@ -1,0 +1,5 @@
+[tool.pytest.ini_options]
+# Add the backend/ directory to sys.path so that `data_quality` (and other
+# top-level packages that live alongside `tests/`) are importable without
+# a pip-install step in CI.
+pythonpath = ["."]
