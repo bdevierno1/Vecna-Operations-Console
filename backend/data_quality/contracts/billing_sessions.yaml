@@ -1,0 +1,77 @@
+# Data contract — billing_sessions
+# Version: 1.0.0
+# Template: data-contract-template.md
+
+dataset:
+  name: billing_sessions
+  table: billing_sessions
+  version: "1.0.0"
+  description: >
+    Cumulative billing counters for a client session (browser tab).
+    Aggregates token usage, LLM cost, scan fees, and tool fees.
+
+ownership:
+  owner: ben@vecna.ai
+  team: vecna-platform
+  producer_service: backend/app/services/billing.py
+  consumers:
+    - frontend (billing panel)
+    - cost reporting
+
+schema:
+  fields:
+    - name: id
+      type: VARCHAR(36)
+      nullable: false
+      description: UUID primary key
+    - name: total_cost_usd
+      type: REAL
+      nullable: false
+      constraints: ">= 0"
+    - name: total_credits
+      type: REAL
+      nullable: false
+      constraints: ">= 0"
+    - name: total_input_tokens
+      type: INTEGER
+      nullable: false
+      constraints: ">= 0"
+    - name: total_output_tokens
+      type: INTEGER
+      nullable: false
+      constraints: ">= 0"
+    - name: total_billable_usd
+      type: REAL
+      nullable: false
+      constraints: ">= 0"
+    - name: created_at
+      type: DATETIME
+      nullable: false
+    - name: updated_at
+      type: DATETIME
+      nullable: false
+
+quality_rules:
+  primary_key: id
+  not_null_cols:
+    - id
+    - total_cost_usd
+    - total_credits
+    - total_input_tokens
+    - total_output_tokens
+    - created_at
+    - updated_at
+  completeness_threshold_pct: 0.5   # null rate must stay below 0.5 %
+  validity_rules:
+    - type: non_negative
+      col: total_cost_usd
+    - type: non_negative
+      col: total_credits
+    - type: non_negative
+      col: total_billable_usd
+
+slas:
+  tier: 1
+  freshness_timestamp_col: updated_at
+  freshness_max_seconds: 3600   # Tier-1: rows must arrive within 1 h of real-time
+  availability_target_pct: 99.9
