@@ -7,6 +7,7 @@ operation_id_var and friends are visible inside tool threads.
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 import logging
 from contextvars import ContextVar, Token
 from typing import Any
@@ -109,7 +110,9 @@ def schedule_tool_emit(payload: dict[str, Any]) -> None:
         return
     fut = asyncio.run_coroutine_threadsafe(_emit_tool_async(payload), loop)
 
-    def _done(f: asyncio.Future[None]) -> None:
+    # run_coroutine_threadsafe returns a concurrent.futures.Future, not an
+    # asyncio.Future, so the done-callback must be typed against that.
+    def _done(f: concurrent.futures.Future[None]) -> None:
         try:
             exc = f.exception()
             if exc:

@@ -167,6 +167,9 @@ export default function App() {
   const wsPingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const wsOperationIdRef = useRef<string | null>(null)
   const deepLinkHandledRef = useRef(false)
+  // Holds the latest connectWs so the reconnect timer can call it without the
+  // callback referencing itself before declaration.
+  const connectWsRef = useRef<((operationId: string) => void) | null>(null)
 
   // WebSocket reconnect / ping tuning
   const WS_MAX_RECONNECT_ATTEMPTS = 5
@@ -202,7 +205,9 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    void loadOps()
+    void (async () => {
+      await loadOps()
+    })()
   }, [loadOps])
 
   useEffect(() => {
@@ -365,7 +370,7 @@ export default function App() {
             const delay = Math.min(WS_BASE_RECONNECT_MS * Math.pow(2, attempt - 1), 32000)
             setWsReconnecting(true)
             wsReconnectTimerRef.current = setTimeout(() => {
-              connectWs(operationId)
+              connectWsRef.current?.(operationId)
             }, delay)
           } else if (
             !terminalStatuses.includes(current) &&
@@ -380,6 +385,11 @@ export default function App() {
     },
     [loadOps, _clearWsTimers, WS_MAX_RECONNECT_ATTEMPTS, WS_BASE_RECONNECT_MS, WS_PING_INTERVAL_MS],
   )
+
+  // Keep the reconnect timer pointed at the latest connectWs.
+  useEffect(() => {
+    connectWsRef.current = connectWs
+  }, [connectWs])
 
   const startOperation = async () => {
     setError(null)
@@ -533,7 +543,9 @@ export default function App() {
     const op = params.get('op')
     if (!op || !/^[0-9a-f-]{36}$/i.test(op)) return
     deepLinkHandledRef.current = true
-    void openPastOperation(op)
+    void (async () => {
+      await openPastOperation(op)
+    })()
     window.history.replaceState({}, '', window.location.pathname)
   }, [openPastOperation])
 
