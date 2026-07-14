@@ -44,9 +44,9 @@ const healthColors: Record<Health, string> = {
   red: 'text-red-400',
 }
 
-const healthBadge: Record<Health, 'default' | 'secondary' | 'destructive'> = {
+const healthBadge: Record<Health, 'default' | 'warning' | 'destructive'> = {
   green: 'default',
-  yellow: 'secondary',
+  yellow: 'warning',
   red: 'destructive',
 }
 
