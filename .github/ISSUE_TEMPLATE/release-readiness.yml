@@ -1,0 +1,102 @@
+name: Release Readiness
+description: Track release-readiness gates before deploying to production.
+title: "Release readiness: <version>"
+labels: ["release"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Complete every section before approving production deployment.
+        Items marked ⛔ are **blocking** — the release cannot proceed until they are resolved.
+
+  - type: checkboxes
+    id: ci
+    attributes:
+      label: "CI & Quality"
+      options:
+        - label: "⛔ All CI checks pass on the release commit (build, tests, lint, type-check)"
+          required: true
+        - label: "⛔ Test coverage meets the configured bar; no unticketted skip/xfail markers"
+          required: true
+        - label: "⛔ No plaintext secrets or credentials in the diff"
+          required: true
+
+  - type: checkboxes
+    id: correctness
+    attributes:
+      label: "Code Correctness"
+      options:
+        - label: "⛔ No known correctness bugs"
+          required: true
+        - label: "⛔ All new behaviour covered by tests"
+          required: true
+        - label: "⛔ Irreversible changes have a documented rollback path"
+          required: true
+
+  - type: checkboxes
+    id: security
+    attributes:
+      label: "Security"
+      options:
+        - label: "⛔ No new security gaps introduced"
+          required: true
+        - label: "Sensitive operations are audit-logged"
+
+  - type: checkboxes
+    id: migrations
+    attributes:
+      label: "Database Migrations"
+      options:
+        - label: "Migrations follow expand → migrate → contract pattern"
+        - label: "Migrations are backward-compatible"
+        - label: "Rollback migration written and tested"
+
+  - type: checkboxes
+    id: feature_flags
+    attributes:
+      label: "Feature Flags & Progressive Rollout"
+      options:
+        - label: "Risky changes are behind a feature flag (default off)"
+        - label: "Kill switch available and tested"
+        - label: "Rollout plan defined: canary → % rollout → 100%"
+
+  - type: checkboxes
+    id: ops
+    attributes:
+      label: "Operational Readiness"
+      options:
+        - label: "Dashboards updated / new metrics added"
+        - label: "Alerts configured for new failure modes"
+        - label: "Runbook updated or created"
+        - label: "On-call team briefed"
+
+  - type: checkboxes
+    id: docs
+    attributes:
+      label: "Documentation & Acceptance"
+      options:
+        - label: "API docs / OpenAPI spec updated"
+        - label: "Release notes / CHANGELOG entry added"
+        - label: "Acceptance criteria verified"
+        - label: "Stakeholder / PM sign-off recorded"
+
+  - type: input
+    id: signoff
+    attributes:
+      label: Stakeholder sign-off
+      description: Link to approval or @mention the approver.
+      placeholder: "e.g. Approved by @pm in #releases — 2026-01-15"
+    validations:
+      required: true
+
+  - type: textarea
+    id: rollback
+    attributes:
+      label: Rollback procedure
+      description: Step-by-step instructions to revert this release if it fails.
+      placeholder: |
+        1. Run `./scripts/rollback.sh <previous-version>`
+        2. Verify health checks pass
+        3. Notify on-call channel
+    validations:
+      required: true

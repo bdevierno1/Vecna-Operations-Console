@@ -70,7 +70,7 @@ def _resolve_dns_impl(target_url: str) -> str:
         for family, _, _, _, sockaddr in socket.getaddrinfo(host, None):
             ip = sockaddr[0]
             fam = "IPv6" if family == socket.AF_INET6 else "IPv4"
-            addrs.append({"family": fam, "address": ip})
+            addrs.append({"family": fam, "address": ip})  # type: ignore[dict-item]  # mixed str/int values
     except OSError as e:
         addrs = [{"error": str(e)}]
 

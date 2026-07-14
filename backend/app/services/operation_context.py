@@ -117,4 +117,4 @@ def schedule_tool_emit(payload: dict[str, Any]) -> None:
         except asyncio.CancelledError:
             pass
 
-    fut.add_done_callback(_done)
+    fut.add_done_callback(_done)  # type: ignore[arg-type]  # asyncio.Future vs concurrent.futures.Future
